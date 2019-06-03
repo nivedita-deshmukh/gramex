@@ -165,6 +165,9 @@ It accepts the following arguments:
       <br>**Example**: [?width=600](capture?width=600&ext=png)
     - `?height=`: image output height. Default: auto (full page)
       <br>**Example**: [?height=600](capture?height=600&ext=png)
+    - `?emulate=`: Mobile device to emulate with UserAgent. (full page)
+      <br>**Example**: [?emulate=iPhone 6](capture?emulate=iPhone 6&ext=png). `emulate` is available only in
+  Chrome, from **v1.56**. Device names can be [iPhone 8, Nexus 10, Galaxy S5, etc][mobiledevices].
     - `?selector=`: Restrict screenshot to (optional) CSS selector in URL
       <br>**Example**: [?selector=.content](capture?selector=.content&ext=png) excludes the sidebar.
     - `?scale=`: zooms the screen by a factor. Default: 1.
@@ -264,3 +267,4 @@ The [Capture](capture) class has convenience methods called `.pdf()`, `.png()`,
 
 [capturehandler]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.CaptureHandler
 [capture]: https://learn.gramener.com/gramex/gramex.handlers.html#gramex.handlers.Capture
+[mobiledevices]: https://github.com/GoogleChrome/puppeteer/blob/master/lib/DeviceDescriptors.js
