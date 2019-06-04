@@ -890,7 +890,7 @@ def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
 _VEGA_SCRIPT = os.path.join(_FOLDER, 'download.vega.js')
 
 
-def download(data, format='json', template=None, **kwargs):
+def download(data, format='json', template=None, args={}, **kwargs):
     '''
     Download a DataFrame or dict of DataFrames in various formats. This is used
     by :py:class:`gramex.handlers.FormHandler`. You are **strongly** advised to
@@ -1030,7 +1030,7 @@ def download(data, format='json', template=None, **kwargs):
     elif format in {'vega', 'vega-lite', 'vegam'}:
         kwargs = kw(orient='records', force_ascii=True)
         spec = kwargs.pop('spec', {})
-        handler = kwargs.pop('handler', None)
+        kwargs.pop('handler', None)
         out = io.BytesIO()
         # conf = {..., spec: {..., data: __DATA__}}
         if isinstance(spec.get('data'), (dict, list)) or 'fromjson' in spec:
@@ -1049,7 +1049,6 @@ def download(data, format='json', template=None, **kwargs):
             out = out.getvalue()
             if format == 'vega':
                 out = b'[' + out + b']'
-        args = {k: v[0] for k, v in handler.args.items() if len(v) > 0}
 
         def format_with(obj, args):
             objn = {}
