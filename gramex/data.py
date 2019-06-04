@@ -1030,7 +1030,7 @@ def download(data, format='json', template=None, **kwargs):
     elif format in {'vega', 'vega-lite', 'vegam'}:
         kwargs = kw(orient='records', force_ascii=True)
         spec = kwargs.pop('spec', {})
-        kwargs.pop('handler', None)
+        handler = kwargs.pop('handler', None)
         out = io.BytesIO()
         # conf = {..., spec: {..., data: __DATA__}}
         if isinstance(spec.get('data'), (dict, list)) or 'fromjson' in spec:
@@ -1049,6 +1049,20 @@ def download(data, format='json', template=None, **kwargs):
             out = out.getvalue()
             if format == 'vega':
                 out = b'[' + out + b']'
+        args = {k: v[0] for k, v in handler.args.items() if len(v) > 0}
+
+        def format_with(obj, args):
+            objn = {}
+            for k, v in obj.items():
+                if isinstance(v, dict):
+                    objn[k] = format_with(v, args)
+                elif isinstance(v, six.string_types):
+                    objn[k] = v.format(**args)
+                else:
+                    objn[k] = v
+            return objn
+
+        spec = format_with(obj=spec, args=args)
         kwargs['spec'] = spec
         conf = json.dumps(kwargs, ensure_ascii=True, separators=(',', ':'), indent=None)
         conf = conf.encode('utf-8').replace(b'"__DATA__"', out)
