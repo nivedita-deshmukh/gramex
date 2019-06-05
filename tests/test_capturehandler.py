@@ -310,5 +310,6 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
                 <span class="pageNumber"></span>/<span class="totalPages"></span></div>'''
         })
         layout = get_layout_elements(result.content)
-        ok_(all([self.url in layout[0], 'Header' in layout[1]]))
+        ok_(self.url in layout[0])
+        ok_('Header' in layout[1])
         ok_('1/1' in layout[-1])
