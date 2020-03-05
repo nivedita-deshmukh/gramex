@@ -6,7 +6,6 @@ from fnmatch import fnmatch
 from io import open
 import logging
 import json
-import sys
 import os
 
 # Libraries required for Gramex
@@ -20,20 +19,19 @@ install_requires = [
     # 'rpy2',                         # OPT: (conda) For gramex.ml.r()
     # 'sklearn',                      # OPT: (conda) For gramex.ml
     'argh >= 0.24.1',               # REQ: dependency for watchdog
-    'blaze',                        # OPT: (conda) gramex.handlers.datahandler
     'boto3 >= 1.5',                 # SRV: Amazon services
-    'cachetools >= 2.1.0',          # SRV: services.cache for memory cache
+    'cachetools >= 3.0.0',          # SRV: services.cache for memory cache
     'colorama',                     # REQ: (conda) gramex.init()
     'colorlog >= 2.7.0',            # REQ: Coloured log files
     'cron-descriptor',              # OPT: admin/schedule to pretty-print cron
     'crontab >= 0.21',              # SRV: services.schedule to parse crontab entries
     'cssselect',                    # OPT: pytest gramex plugin
-    'datashape',                    # OPT: (conda) gramex.handlers.datahandler
     'diskcache >= 2.8.3',           # SRV: services.cache for disk cache
     'h5py',                         # OPT: (conda) gramex.cache.HDF5Store
     'ipdb',                         # OPT: gramex.debug
     'inflect',                      # REQ: NLG
     'jmespath',                     # OPT: pytest gramex plugin
+    'joblib',                       # OPT: For gramex.ml
     'ldap3 >= 2.2.4',               # OPT: LDAP connections
     'lxml',                         # OPT: (conda) gramex.pptgen
     'markdown',                     # OPT: transforms, gramex.services.create_alert()
@@ -44,12 +42,13 @@ install_requires = [
     'passlib >= 1.6.5',             # REQ: password storage (e.g. in handlers.DBAuth)
     'pathlib',                      # REQ: Manipulate paths. Part of Python 3.3+
     'pathtools >= 0.1.1',           # REQ: dependency for watchdog
-    'psycopg2 >= 2.7.1',            # OPT: PostgreSQL connections
+    'psutil',                       # REQ: monitor process
     'pymysql',                      # OPT: MySQL connections
     'pytest',                       # OPT: (conda) pytest gramex plugin
     'python-pptx >= 0.6.6',         # SRV: pptgen
-    'pyyaml >= 3.10',               # REQ: Parse YAML files for config
+    'pyyaml >= 5.1',                # REQ: Parse YAML files for config
     'redis >= 2.10.0',              # SRV: RedisStore
+    'requests',                     # REQ: HTTP library for python
     'seaborn',                      # OPT: (conda) gramex.data.download()
     'selenium',                     # OPT: pytest gramex plugin
     'setuptools >= 16.0',           # REQ: 16.0 has good error message support
@@ -57,16 +56,13 @@ install_requires = [
     'six',                          # REQ: Python 3 compatibility
     'sqlalchemy',                   # REQ: (conda) gramex.data.filter()
     'sqlitedict >= 1.5.0',          # SRV: SQLiteStore
+    'tables',                       # REQ: HDF5 reading / writing
     'textblob',                     # OPT: Gramex Guide TwitterRESTHandler example
     'tornado == 5.1.1',             # REQ: Web server
     'watchdog >= 0.8',              # REQ: Monitor file changes
     'xlrd',                         # REQ: (conda) gramex.data.download()
     'xmljson >= 0.1.5',             # SRV: transforms.badgerfish to convert objects to/from XML
 ]
-
-if sys.version_info[0] < 3:
-    # handlers.datahandler uses futures (backport for 2.7)
-    install_requires.append('futures >= 3.0.5')
 
 
 def read_gitignore(path, exclude=set()):
@@ -110,6 +106,8 @@ def install_apps(self):
                 gramex.install.run_setup(target)
             except Exception:
                 logging.exception('Installation failed: %s', target)
+    # Install guide
+    gramex.install.install(['guide'], {})
 
 
 class PostDevelopCommand(develop):
@@ -206,6 +204,7 @@ setup(
         'websocket-client',         # For websocket testing
         'pdfminer.six',             # For CaptureHandler testing
         'cssselect',                # For HTML testing (test_admin.py)
+        'psycopg2 >= 2.7.1'         # OPT: PostgreSQL connections
     ],
     cmdclass={
         'develop': PostDevelopCommand,

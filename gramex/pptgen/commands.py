@@ -257,13 +257,21 @@ def table(shape, spec, data):
     data = compile_function(spec, 'data', data, handler)
     if not len(data):
         return
-    data_cols = data.columns.intersection(spec.get('columns', {}).keys() or data.columns)
+    data_cols = data.columns
+    data_cols_len = len(data_cols)
     table_properties = utils.TableProperties()
     # Extending table if required.
-    table_properties.extend_table(shape, data, len(data) + 1, len(data_cols))
+    table_properties.extend_table(shape, data, len(data) + 1, data_cols_len)
     # Fetching Table Style for All Cells and texts.
     tbl_style = table_properties.get_default_css(shape)
-    cell_style = table_properties.get_css(spec, data_cols, data)
+    input_colspec = spec.get('columns', {})
+    input_cols = input_colspec.keys()
+    if all(isinstance(x, int) for x in input_cols):
+        for x in list(input_cols):
+            if x < data_cols_len:
+                input_colspec[data_cols[x]] = input_colspec.pop(x)
+    styled_cols = data.columns.intersection(input_cols or data_cols)
+    cell_style = table_properties.get_css(spec, styled_cols, data)
     data = data.to_dict(orient='records')
     for row_num, row in enumerate(shape.table.rows):
         cols = len(row.cells._tr.tc_lst)
@@ -340,7 +348,7 @@ def chart(shape, spec, data):
     data = compile_function(info, 'data', data, handler)
     # Getting subset of data if `usecols` is defined.
     change_data = data.reset_index(drop=True)[info.get('usecols', data.columns)]
-    series_cols = change_data.columns.difference([info['x']])
+    series_cols = change_data.columns.drop(info['x']) if info['x'] else change_data.columns
     chart_name = next((k for k in chart_types if chart_type in chart_types[k]), None)
 
     if not chart_name:

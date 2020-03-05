@@ -116,6 +116,13 @@ def _markdown(handle, **kwargs):
     return markdown(handle.read(), **{k: kwargs.pop(k, v) for k, v in _markdown_defaults.items()})
 
 
+@opener
+def _yaml(handle, **kwargs):
+    import yaml
+    defaults = {'Loader': yaml.FullLoader}
+    return yaml.load(handle.read(), **{k: kwargs.pop(k, v) for k, v in defaults.items()})
+
+
 def _template(path, **kwargs):
     root, name = os.path.split(path)
     return tornado.template.Loader(root, **kwargs).load(name)
@@ -166,6 +173,8 @@ _OPEN_CALLBACKS = dict(
     markdown=_markdown,
     tmpl=_template,
     template=_template,
+    yml=_yaml,
+    yaml=_yaml
 )
 
 
@@ -264,9 +273,6 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
             method = None
             if callback in _OPEN_CALLBACKS:
                 method = _OPEN_CALLBACKS[callback]
-            elif callback in {'yml', 'yaml'}:
-                import yaml
-                method = opener(yaml.load)
             elif callback in {'json'}:
                 import json
                 method = opener(json.load)
@@ -293,18 +299,15 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     return (result, reloaded) if _reload_status else result
 
 
-def open_cache(cache):
+def set_cache(cache, old_cache):
     '''
     Use ``cache`` as the new cache for all open requests.
     Copies keys from old cache, and deletes them from the old cache.
     '''
-    global _OPEN_CACHE
-    # Copy keys from old cache to new cache. Delete from
-    keys = list(_OPEN_CACHE.keys())
-    for key in keys:
-        cache[key] = _OPEN_CACHE[key]
-        del _OPEN_CACHE[key]
-    _OPEN_CACHE = cache
+    for key in list(old_cache.keys()):
+        cache[key] = old_cache[key]
+        del old_cache[key]
+    return cache
 
 
 _SAVE_CALLBACKS = dict(
@@ -424,7 +427,7 @@ def query(sql, engine, state=None, **kwargs):
     _cache = kwargs.pop('_cache', _QUERY_CACHE)
     store_cache = True
 
-    key = (sql, engine.url)
+    key = (str(sql), json.dumps(kwargs.get('params', {}), sort_keys=True), engine.url)
     current_status = _cache.get(key, {}).get('status', None)
     if isinstance(state, (list, tuple)):
         status = _table_status(engine, tuple(state))
